@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: rpi-ip-server-daemonset
+  labels:
+    app: rpi-ip-server
+spec:
+  selector:
+    matchLabels:
+      app: rpi-ip-server
+  template:
+    metadata:
+      labels:
+        app: rpi-ip-server
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      tolerations: # Add this section
+      - key: "node-role.kubernetes.io/master"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "monitoring"
+        operator: "Exists" # Or "Equal" with value: "true"
+        effect: "NoSchedule"
+      - key: "storagesolution"
+        operator: "Exists" # Or "Equal" with value: "longhorn"
+        effect: "NoSchedule"
+      containers:
+      - name: rpi-ip-server
+        image: dagudelo/rpi-ip-server:latest
+        ports:
+        - containerPort: 5000
+          hostPort: 5000
+        imagePullPolicy: Always
+      restartPolicy: Always
